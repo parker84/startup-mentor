@@ -23,8 +23,8 @@ from constants import (
 # --------------setup
 logger = logging.getLogger(__name__)
 coloredlogs.install(level=config('LOG_LEVEL', default='INFO'))
-st.set_page_config(page_title='GoT Chat', page_icon='⚔️', initial_sidebar_state="auto", menu_items=None)
-st.title("Game of Thrones Chatbot ⚔️")
+st.set_page_config(page_title='Startup Mentor', page_icon='💻', initial_sidebar_state="auto", menu_items=None)
+st.title("Startup Mentor 💻")
 
 st.sidebar.subheader("Enter Your API Key 🗝️")
 open_api_key = st.sidebar.text_input(
@@ -57,12 +57,7 @@ def get_vectorstore():
     return vectorstore
 
 @st.cache_data
-def get_response_from_question(_vectorstore, question, memory, k=10):
-    """
-    gpt-3.5-turbo can handle up to 4097 tokens. Setting the chunksize to 1000 and k to 4 maximizes
-    the number of tokens to analyze.
-    """
-
+def get_response_from_question(_vectorstore, question, memory, k=5):
     docs = _vectorstore.similarity_search(question, k=k)
     docs_page_content = " ".join([d.page_content for d in docs])
 
@@ -70,25 +65,30 @@ def get_response_from_question(_vectorstore, question, memory, k=10):
 
     # Template to use for the system message prompt
     template = """
-        Your name is Tyrion Lannister, son of Tywin Lannister.
+        You are an assistant to advice founders and employees in startups.
 
-        You are an expert on the history of Westeros, and seasoned in the art of war and politics.
+        You have access to the best books on startups / business and draw upon these books to
+        give answers / advice / recommendations when asked.
         
-        Here is relevant information on the history of Westeros to 
-        help you answer the following questions: {docs}
-
+        Here is relevant information from those books to  
+        help you answer the following questions:
+        
+        {docs}
+        
         Here is relevant information from the current conversation to help you answer the following question: {memory}
         
         Only use the factual information from these books to answer the question.
         
-        If you feel like you don't have enough information to answer the question, say "Sorry, I'm a Dwarf not a wizard, I don't know the answer to that".
+        If you feel like you don't have enough information to answer the question, say "Sorry, but I don't have enough information to give you a confident answer to that question".
         """
 
     system_message_prompt = SystemMessagePromptTemplate.from_template(template)
 
     # Human question prompt
     human_template = """
-        Someone is coming to you (Tyrion Lannister) for your expert advice, they are in need of your help.
+        Someone is is coming to you for advice, only advice based on the information from the books that
+        have just been directly provided to you, do not make things up.
+        Quote and reference these books directly as much as possible. 
         Here is there question: {question}
     """
     human_message_prompt = HumanMessagePromptTemplate.from_template(human_template)
@@ -107,8 +107,8 @@ if 'responses' not in st.session_state:
     st.session_state['responses'] = []
 
 question = st.text_input(
-    label="Ask Tyrion a question",
-    value="What role did you play in the battle of the blackwater?"
+    label="Ask Mentor a question",
+    value="How can I secure a competitive moat for my business?"
 )
 
 if question != "" and (open_api_key == '' or open_api_key is None):
@@ -124,7 +124,7 @@ else:
         )
     else:
         memory = None
-    response, docs = get_response_from_question(vectorstore, question=question, memory=memory, k=10)
+    response, docs = get_response_from_question(vectorstore, question=question, memory=memory, k=5)
 
     st.session_state['questions'].append(question)
     st.session_state['responses'].append(response)

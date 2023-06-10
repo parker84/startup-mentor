@@ -135,3 +135,15 @@ else:
         message(question, is_user=True)  # align's the message to the left
         message(response, is_user=False)  # align's the message to the right
 
+    with st.expander("Top 5 Most Relevant Pages To Your Question"):
+        for page in docs:
+            st.markdown(
+f"""
+### Book: {page.metadata['book'].replace('_', ' ').title()}
+
+page: `{int(page.metadata['page'])}`
+
+Content:
+{page.page_content}
+"""
+            )
